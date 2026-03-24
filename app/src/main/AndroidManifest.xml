@@ -24,6 +24,10 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AndroidTV">
 
+        <meta-data
+            android:name="BITMOVIN_PLAYER_LICENSE_KEY"
+            android:value="93a2cfaf-9e1c-47b9-8463-3a70fb7acfd1" />
+
         <!-- Main browsing activity (TV launcher entry) -->
         <activity
             android:name=".ui.MainActivity"
