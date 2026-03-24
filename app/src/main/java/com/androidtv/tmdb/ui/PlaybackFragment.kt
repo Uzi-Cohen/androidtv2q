@@ -1,31 +1,19 @@
 package com.androidtv.tmdb.ui
 
-import android.media.AudioAttributes
-import android.media.MediaPlayer
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.view.LayoutInflater
-import android.view.SurfaceHolder
-import android.view.SurfaceView
 import android.view.View
 import android.view.ViewGroup
-import android.widget.FrameLayout
-import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.leanback.app.PlaybackSupportFragment
-import androidx.leanback.widget.Action
-import androidx.leanback.widget.ArrayObjectAdapter
-import androidx.leanback.widget.ClassPresenterSelector
-import androidx.leanback.widget.ControlButtonPresenterSelector
-import androidx.leanback.widget.ListRow
-import androidx.leanback.widget.ListRowPresenter
-import androidx.leanback.widget.PlaybackControlsRow
-import androidx.leanback.widget.PlaybackControlsRowPresenter
+import androidx.media3.common.MediaItem
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.ui.PlayerView
 import com.androidtv.tmdb.R
 import com.androidtv.tmdb.model.Video
-import com.androidtv.tmdb.player.TvMediaPlayer
 
 class PlaybackFragment : Fragment() {
 
@@ -43,14 +31,14 @@ class PlaybackFragment : Fragment() {
         }
     }
 
-    private var tvMediaPlayer: TvMediaPlayer? = null
-    private var surfaceView: SurfaceView? = null
-    private var progressBar: ProgressBar? = null
+    private var player: ExoPlayer? = null
+    private var playerView: PlayerView? = null
     private var video: Video? = null
     private var title: String = "Video"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        @Suppress("DEPRECATION")
         video = arguments?.getSerializable(ARG_VIDEO) as? Video
         title = arguments?.getString(ARG_TITLE, "Video") ?: "Video"
     }
@@ -65,8 +53,7 @@ class PlaybackFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        surfaceView = view.findViewById(R.id.surface_view)
-        progressBar = view.findViewById(R.id.loading_progress)
+        playerView = view.findViewById(R.id.player_view)
 
         val video = this.video
         if (video == null) {
@@ -76,84 +63,61 @@ class PlaybackFragment : Fragment() {
         }
 
         if (video.site.equals("YouTube", ignoreCase = true)) {
-            // YouTube videos can't be played directly via MediaPlayer.
-            // Show a message with the video info instead, or use a WebView-based player.
-            showYouTubeMessage(video)
+            playYouTube(video.key)
         } else {
-            setupMediaPlayer(video)
+            setupExoPlayer(video.key)
         }
     }
 
-    private fun showYouTubeMessage(video: Video) {
-        progressBar?.visibility = View.GONE
-        Toast.makeText(
-            context,
-            "Trailer: ${video.name}\nYouTube Key: ${video.key}\n\nFor production, integrate a YouTube player or WebView.",
-            Toast.LENGTH_LONG
-        ).show()
+    private fun playYouTube(videoKey: String) {
+        // Try YouTube TV app first, then any browser, then fall back to demo video
+        val launched = tryStartActivity(
+            Intent(Intent.ACTION_VIEW, Uri.parse("vnd.youtube:$videoKey"))
+        ) || tryStartActivity(
+            Intent(Intent.ACTION_VIEW, Uri.parse("https://www.youtube.com/watch?v=$videoKey"))
+        )
 
-        // In a real app you'd use YouTube Android Player API or a WebView here.
-        // For demo purposes with MediaPlayer, we show the info and demonstrate
-        // MediaPlayer with a sample MP4 stream.
-        setupDemoMediaPlayer()
+        if (launched) {
+            activity?.finish()
+        } else {
+            // No YouTube app or browser available — play demo video with controls
+            setupExoPlayer("https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4")
+        }
     }
 
-    private fun setupDemoMediaPlayer() {
-        // Demonstrate MediaPlayer with a publicly available sample video
-        val sampleUrl = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
-        tvMediaPlayer = TvMediaPlayer(
-            context = requireContext(),
-            surfaceView = surfaceView!!,
-            onPrepared = {
-                progressBar?.visibility = View.GONE
-            },
-            onError = { what, extra ->
-                progressBar?.visibility = View.GONE
-                Toast.makeText(context, "Playback error ($what)", Toast.LENGTH_SHORT).show()
-            },
-            onCompletion = {
-                activity?.finish()
-            }
-        )
-        tvMediaPlayer?.play(sampleUrl, title)
+    private fun tryStartActivity(intent: Intent): Boolean {
+        return try {
+            startActivity(intent)
+            true
+        } catch (e: ActivityNotFoundException) {
+            false
+        }
     }
 
-    private fun setupMediaPlayer(video: Video) {
-        // For non-YouTube sources that provide direct URLs
-        val videoUrl = video.key // In practice, construct the actual URL
-
-        tvMediaPlayer = TvMediaPlayer(
-            context = requireContext(),
-            surfaceView = surfaceView!!,
-            onPrepared = {
-                progressBar?.visibility = View.GONE
-            },
-            onError = { what, extra ->
-                progressBar?.visibility = View.GONE
-                Toast.makeText(context, "Playback error ($what)", Toast.LENGTH_SHORT).show()
-            },
-            onCompletion = {
-                activity?.finish()
-            }
-        )
-        tvMediaPlayer?.play(videoUrl, title)
+    private fun setupExoPlayer(url: String) {
+        player = ExoPlayer.Builder(requireContext()).build().also { exoPlayer ->
+            playerView?.player = exoPlayer
+            exoPlayer.setMediaItem(MediaItem.fromUri(url))
+            exoPlayer.prepare()
+            exoPlayer.playWhenReady = true
+        }
     }
 
     override fun onPause() {
         super.onPause()
-        tvMediaPlayer?.pause()
+        player?.pause()
     }
 
     override fun onResume() {
         super.onResume()
-        tvMediaPlayer?.resume()
+        player?.play()
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        tvMediaPlayer?.release()
-        tvMediaPlayer = null
-        surfaceView = null
-        progressBar = null
+        player?.release()
+        player = null
+        playerView?.player = null
+        playerView = null
     }
 }
