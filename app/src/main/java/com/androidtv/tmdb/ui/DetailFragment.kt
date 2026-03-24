@@ -27,6 +27,7 @@ class DetailFragment : DetailsSupportFragment() {
     companion object {
         private const val ARG_MEDIA_ID = "media_id"
         private const val ARG_MEDIA_TYPE = "media_type"
+        private const val ACTION_PLAY = 1L
 
         fun newInstance(mediaId: Long, mediaType: String): DetailFragment {
             return DetailFragment().apply {
@@ -260,8 +261,4 @@ class DetailFragment : DetailsSupportFragment() {
     }
 
     private fun <T> Result<T>.getOrReturn(): T? = getOrNull()
-
-    companion object {
-        private const val ACTION_PLAY = 1L
-    }
 }
