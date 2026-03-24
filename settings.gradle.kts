@@ -11,6 +11,7 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        maven { url = uri("https://artifacts.bitmovin.com/artifactory/public-releases") }
     }
 }
 

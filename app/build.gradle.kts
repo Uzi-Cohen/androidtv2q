@@ -75,7 +75,6 @@ dependencies {
     implementation("com.github.bumptech.glide:glide:4.16.0")
     annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
 
-    // Media3 ExoPlayer (video playback with built-in controls)
-    implementation("androidx.media3:media3-exoplayer:1.3.1")
-    implementation("androidx.media3:media3-ui:1.3.1")
+    // Bitmovin Player
+    implementation("com.bitmovin.player:player:3.+")
 }

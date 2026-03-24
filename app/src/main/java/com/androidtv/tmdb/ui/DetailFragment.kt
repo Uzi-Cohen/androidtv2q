@@ -224,18 +224,15 @@ class DetailFragment : DetailsSupportFragment() {
                 }
 
                 if (trailer != null) {
+                    val title = if (mediaType == "movie") {
+                        (rowsAdapter.get(0) as? DetailsOverviewRow)?.item
+                            ?.let { (it as? MovieDetail)?.title }
+                    } else {
+                        (rowsAdapter.get(0) as? DetailsOverviewRow)?.item
+                            ?.let { (it as? TvShowDetail)?.name }
+                    } ?: "Video"
                     val intent = Intent(requireContext(), PlaybackActivity::class.java).apply {
-                        putExtra(PlaybackActivity.EXTRA_VIDEO, trailer)
-                        putExtra(
-                            PlaybackActivity.EXTRA_TITLE,
-                            if (mediaType == "movie") {
-                                (rowsAdapter.get(0) as? DetailsOverviewRow)?.item
-                                    ?.let { (it as? MovieDetail)?.title }
-                            } else {
-                                (rowsAdapter.get(0) as? DetailsOverviewRow)?.item
-                                    ?.let { (it as? TvShowDetail)?.name }
-                            } ?: "Video"
-                        )
+                        putExtra(PlaybackActivity.EXTRA_TITLE, title)
                     }
                     startActivity(intent)
                 } else {
