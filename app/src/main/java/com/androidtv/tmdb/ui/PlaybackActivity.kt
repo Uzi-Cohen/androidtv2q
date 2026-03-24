@@ -18,14 +18,20 @@ class PlaybackActivity : Activity() {
 
     companion object {
         const val EXTRA_TITLE = "extra_title"
+        const val EXTRA_MEDIA_ID = "extra_media_id"
+        const val EXTRA_MEDIA_TYPE = "extra_media_type"
     }
 
-    private var analyticsLicenseKey = "e8501282-73fc-4df8-9922-1a7ef817cb78"
+    private val analyticsLicenseKey = "e8501282-73fc-4df8-9922-1a7ef817cb78"
     private lateinit var playerView: PlayerView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_playback)
+
+        val mediaId = intent.getLongExtra(EXTRA_MEDIA_ID, -1)
+        val mediaType = intent.getStringExtra(EXTRA_MEDIA_TYPE) ?: "movie"
+        val streamTitle = intent.getStringExtra(EXTRA_TITLE) ?: "Video"
 
         val analyticsConfig = AnalyticsConfig(
             licenseKey = analyticsLicenseKey,
@@ -37,7 +43,7 @@ class PlaybackActivity : Activity() {
         playerView = findViewById(R.id.playerView)
         playerView.player = player
 
-        val streamTitle = intent.getStringExtra(EXTRA_TITLE) ?: "Art of Motion"
+        val videoId = "androidtv-$mediaType-$mediaId"
         val source = Source(
             SourceConfig(
                 url = "https://cdn.bitmovin.com/content/assets/art-of-motion-dash-hls-progressive/mpds/f08e80da-bf1d-4e3d-8899-f0f6155f6efa.mpd",
@@ -46,7 +52,7 @@ class PlaybackActivity : Activity() {
             ),
             AnalyticsSourceConfig.Enabled(
                 SourceMetadata(
-                    videoId = "androidtv-wizard-Art_of_Motion-1774359529041",
+                    videoId = videoId,
                     title = streamTitle,
                 )
             ),

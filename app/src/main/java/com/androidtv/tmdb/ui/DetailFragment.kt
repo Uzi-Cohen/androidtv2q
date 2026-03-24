@@ -64,7 +64,7 @@ class DetailFragment : DetailsSupportFragment() {
                     backgroundColor = ContextCompat.getColor(requireContext(), R.color.detail_background)
                     setOnActionClickedListener { action ->
                         when (action.id) {
-                            ACTION_PLAY -> playTrailer()
+                            ACTION_PLAY -> playContent()
                         }
                     }
                 }
@@ -113,7 +113,7 @@ class DetailFragment : DetailsSupportFragment() {
 
         // Actions
         detailRow.actionsAdapter = ArrayObjectAdapter().apply {
-            add(Action(ACTION_PLAY, "Play Trailer", null))
+            add(Action(ACTION_PLAY, "Play", null))
         }
 
         // Load poster image
@@ -173,7 +173,7 @@ class DetailFragment : DetailsSupportFragment() {
         val detailRow = DetailsOverviewRow(detail)
 
         detailRow.actionsAdapter = ArrayObjectAdapter().apply {
-            add(Action(ACTION_PLAY, "Play Trailer", null))
+            add(Action(ACTION_PLAY, "Play", null))
         }
 
         loadPosterInto(detail.posterUrl(), detailRow)
@@ -206,42 +206,21 @@ class DetailFragment : DetailsSupportFragment() {
         }
     }
 
-    private fun playTrailer() {
-        viewLifecycleOwner.lifecycleScope.launch {
-            val videosResult = if (mediaType == "movie") {
-                repository.getMovieVideos(mediaId)
-            } else {
-                repository.getTvShowVideos(mediaId)
-            }
+    private fun playContent() {
+        val title = if (mediaType == "movie") {
+            (rowsAdapter.get(0) as? DetailsOverviewRow)?.item
+                ?.let { (it as? MovieDetail)?.title }
+        } else {
+            (rowsAdapter.get(0) as? DetailsOverviewRow)?.item
+                ?.let { (it as? TvShowDetail)?.name }
+        } ?: "Video"
 
-            videosResult.onSuccess { videos ->
-                // Find a YouTube trailer
-                val trailer = videos.firstOrNull {
-                    it.site.equals("YouTube", ignoreCase = true) &&
-                        it.type.equals("Trailer", ignoreCase = true)
-                } ?: videos.firstOrNull {
-                    it.site.equals("YouTube", ignoreCase = true)
-                }
-
-                if (trailer != null) {
-                    val title = if (mediaType == "movie") {
-                        (rowsAdapter.get(0) as? DetailsOverviewRow)?.item
-                            ?.let { (it as? MovieDetail)?.title }
-                    } else {
-                        (rowsAdapter.get(0) as? DetailsOverviewRow)?.item
-                            ?.let { (it as? TvShowDetail)?.name }
-                    } ?: "Video"
-                    val intent = Intent(requireContext(), PlaybackActivity::class.java).apply {
-                        putExtra(PlaybackActivity.EXTRA_TITLE, title)
-                    }
-                    startActivity(intent)
-                } else {
-                    Toast.makeText(context, "No trailer available", Toast.LENGTH_SHORT).show()
-                }
-            }.onFailure {
-                Toast.makeText(context, "Failed to load videos", Toast.LENGTH_SHORT).show()
-            }
+        val intent = Intent(requireContext(), PlaybackActivity::class.java).apply {
+            putExtra(PlaybackActivity.EXTRA_MEDIA_ID, mediaId)
+            putExtra(PlaybackActivity.EXTRA_MEDIA_TYPE, mediaType)
+            putExtra(PlaybackActivity.EXTRA_TITLE, title)
         }
+        startActivity(intent)
     }
 
     private fun loadPosterInto(url: String?, row: DetailsOverviewRow) {
