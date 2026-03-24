@@ -5,12 +5,12 @@ plugins {
 
 android {
     namespace = "com.androidtv.tmdb"
-    compileSdk = 34
+    compileSdk = 33
 
     defaultConfig {
         applicationId = "com.androidtv.tmdb"
         minSdk = 21
-        targetSdk = 34
+        targetSdk = 33
         versionCode = 1
         versionName = "1.0"
 
@@ -56,13 +56,13 @@ dependencies {
     implementation("androidx.leanback:leanback:1.0.0")
 
     // AndroidX Core
-    implementation("androidx.core:core-ktx:1.12.0")
+    implementation("androidx.core:core-ktx:1.9.0")
     implementation("androidx.appcompat:appcompat:1.6.1")
-    implementation("androidx.fragment:fragment-ktx:1.6.2")
+    implementation("androidx.fragment:fragment-ktx:1.5.5")
 
     // Lifecycle + ViewModel + Coroutines
-    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.5.1")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.5.1")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 
     // Networking (Retrofit + OkHttp)
